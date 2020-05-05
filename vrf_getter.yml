@@ -1,0 +1,29 @@
+---
+- name: "Play 1: Capture and Restore VRF config"
+  hosts: routers
+  connection: network_cli
+  tasks:
+    - name: "Pre-Task"
+      ios_config:
+        backup: yes
+        
+    - name: "Task 1: Get VRF config from routers"
+      ios_command:
+        commands: "show running-config | section vrf definition"
+      register: cli_result
+    
+    - name: "Task 2: Print VRF output"
+      debug:
+        msg: "{{ cli_result }}"
+
+    - name: "Task 3: Create outputs folder"
+      file:
+        path: "outputs"
+        state: directory
+      run_once: true
+
+    - name: "Task 4: Write output file"
+      copy:
+        content: "{{ cli_result.stdout[0] }}\n"
+        dest: "outputs/{{ inventory_hostname }}.txt"
+        

@@ -1,0 +1,265 @@
+Building configuration...
+
+  
+Current configuration : 5368 bytes
+!
+! Last configuration change at 10:01:59 UTC Sat May 2 2020
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition CHEMICAL
+ description CHEMICAL ENGINEERING FIRM
+ rd 65000:2
+ route-target export 65000:2
+ route-target import 65000:2
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+vrf definition CHEM_MGMT
+ description CHEMICAL ENGINEERING MANAGER
+ rd 65000:3
+ route-target export 65000:3
+ route-target import 65000:4
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+vrf definition POLICE
+ description POLICE DEPARTMENT
+ rd 65000:1
+ route-target export 65000:1
+ route-target import 65000:1
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+!
+no aaa new-model
+ethernet lmi ce
+!
+!
+!
+no process cpu autoprofile hog
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip domain name test.lab
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+username ansible privilege 15 secret 5 $1$4/t9$GKeilXhYgsKuMerlT6RKj.
+!
+redundancy
+!
+no cdp log mismatch duplex
+no cdp run
+!
+ip tcp mss 1400
+ip tcp synwait-time 5
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 192.168.0.1 255.255.255.255
+ ip ospf 1 area 0
+!
+interface Loopback1
+ description POLICE DEPARTMENT
+ vrf forwarding POLICE
+ ip address 10.0.1.1 255.255.255.255
+!
+interface Loopback2
+ description CHEMICAL ENGINEERING FIRM
+ vrf forwarding CHEMICAL
+ ip address 10.0.2.1 255.255.255.255
+!
+interface Loopback3
+ description CHEMICAL ENGINEERING MANAGER
+ vrf forwarding CHEM_MGMT
+ ip address 10.0.3.1 255.255.255.255
+!
+interface Tunnel13
+ description R1 TO R3
+ ip address 192.168.13.1 255.255.255.0
+ ip ospf 1 area 0
+ mpls ip
+ tunnel source GigabitEthernet0/1
+ tunnel destination 10.125.0.63
+!
+interface GigabitEthernet0/0
+ description management
+ ip address 10.73.73.101 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ no cdp enable
+!
+interface GigabitEthernet0/1
+ ip address 10.125.0.61 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ no cdp enable
+!
+interface GigabitEthernet0/2
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+ no cdp enable
+!
+interface GigabitEthernet0/3
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+ no cdp enable
+!
+router ospf 1
+ router-id 192.168.0.1
+!
+router bgp 65000
+ bgp router-id 192.168.0.1
+ bgp log-neighbor-changes
+ !
+ scope global
+  neighbor 192.168.0.2 remote-as 65000
+  neighbor 192.168.0.2 update-source Loopback0
+  !
+  address-family ipv4
+  !
+  !
+  address-family vpnv4
+   neighbor 192.168.0.2 activate
+   neighbor 192.168.0.2 send-community extended
+  !
+ !
+ !
+ scope vrf CHEMICAL
+  !
+  address-family ipv4
+   redistribute connected
+  !
+ !
+ !
+ scope vrf CHEM_MGMT
+  !
+  address-family ipv4
+   redistribute connected
+  !
+ !
+ !
+ scope vrf POLICE
+  !
+  address-family ipv4
+   redistribute connected
+  !
+ !
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip ssh logging events
+ip ssh version 2
+!
+!
+!
+mpls ldp router-id Loopback0
+!
+control-plane
+!
+banner exec ^C
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************^C
+banner incoming ^C
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************^C
+banner login ^C
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************^C
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ login local
+ transport input ssh
+!
+no scheduler allocate
+!
+end
